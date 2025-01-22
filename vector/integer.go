@@ -5,10 +5,10 @@ import (
 )
 
 type IntegerVector struct {
-	Data []int
+	Data []float64
 }
 
-func NewIntegerVector(elements ...int) Vector {
+func NewIntegerVector(elements ...float64) *IntegerVector {
 	return &IntegerVector{
 		Data: elements,
 	}
@@ -18,7 +18,7 @@ func (vec *IntegerVector) Size() int {
 	return len(vec.Data)
 }
 
-func (vec *IntegerVector) ScalarMultiplication(scalar int) {
+func (vec *IntegerVector) ScalarMultiplication(scalar float64) {
 	var size int = vec.Size()
 	assert.AssertNotEqual(size, 0)
 	for i := 0; i < size; i++ {
@@ -26,14 +26,19 @@ func (vec *IntegerVector) ScalarMultiplication(scalar int) {
 	}
 }
 
-func (vec *IntegerVector) GetVal(index int) int {
+func (vec *IntegerVector) GetVal(index int) float64 {
 	assert.AssertRange[int](index, 0, vec.Size()-1)
 	return vec.Data[index]
 }
 
-func (vec *IntegerVector) DotProduct(another IntegerVector) int {
+func (vec *IntegerVector) SetVal(index int, val float64) {
+	assert.AssertRange[int](index, 0, vec.Size()-1)
+	vec.Data[index] = val
+}
+
+func (vec *IntegerVector) DotProduct(another IntegerVector) float64 {
 	assert.AssertEqual(vec.Size(), another.Size())
-	var dot_product int = 0
+	var dot_product float64 = 0
 
 	for i := 0; i < vec.Size(); i++ {
 		dot_product += (vec.GetVal(i) * another.GetVal(i))
@@ -41,10 +46,10 @@ func (vec *IntegerVector) DotProduct(another IntegerVector) int {
 	return dot_product
 }
 
-func (vec *IntegerVector) PushBack(element int) {
+func (vec *IntegerVector) PushBack(element float64) {
 	vec.Data = append(vec.Data, element)
 }
 
-func (vec *IntegerVector) PushFront(element int) {
-	vec.Data = append([]int{element}, vec.Data...)
+func (vec *IntegerVector) PushFront(element float64) {
+	vec.Data = append([]float64{element}, vec.Data...)
 }
