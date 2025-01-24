@@ -14,6 +14,18 @@ func NewIntegerVector(elements ...float64) *IntegerVector {
 	}
 }
 
+func NewIntegerVectorWithSize(size int, default_val *float64) *IntegerVector {
+	var default_value float64 = 0
+	if default_val != nil {
+		default_value = *default_val
+	}
+	var data []float64 = make([]float64, size)
+	for i := 0; i < size; i++ {
+		data[i] = default_value
+	}
+	return NewIntegerVector(data...)
+}
+
 func (vec *IntegerVector) Size() int {
 	return len(vec.Data)
 }
