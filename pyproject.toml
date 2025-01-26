@@ -1,0 +1,17 @@
+[project]
+name = "aayam"
+version = "0.1.0"
+description = "Benchmarking Go code outputs with respect to their python libraires"
+authors = [
+    {name = "Mehul-Kumar-27",email = "mehul2002kumar@gmail.com"}
+]
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "numpy (>=2.2.2,<3.0.0)"
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"

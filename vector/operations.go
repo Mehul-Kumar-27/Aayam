@@ -13,14 +13,13 @@ import (
 // 3. Iterates over each vector and adds corresponding elements to the initial vector.
 // The function returns a pointer to the resultant IntegerVector and nil if successful, or an error if any of the checks fail.
 func AddFloat64Vectors(vectors []Float64Vec, opts ...*concurrency.ConcurrencyOptions) (*Float64Vec, error) {
-	vectors_len := len(vectors)
-	if vectors_len == 0 {
-		return nil, ErrEmptyVectorLength
-	}
 
 	// Get the size of the first vector
 	size := vectors[0].Size()
-
+	if size == 0 {
+		return nil, ErrEmptyVectorLength
+	}
+	var vectors_len int = len(vectors)
 	// Check whether all the vectors are of the same size
 	for i := 1; i < vectors_len; i++ {
 		if vectors[i].Size() != size {
