@@ -6,12 +6,12 @@ import (
 )
 
 type IntegerMatrix struct {
-	Data    []vec.IntegerVector
+	Data    []vec.Float64Vec
 	Rows    int
 	Columns int
 }
 
-func NewIntegerMatrix(elements ...vec.IntegerVector) *IntegerMatrix {
+func NewIntegerMatrix(elements ...vec.Float64Vec) *IntegerMatrix {
 	rows := len(elements)
 	columns := 0
 	if rows > 0 {
@@ -30,7 +30,7 @@ func NewIntegerMatrixWithDimensions(row, column int, default_value *float64) *In
 	if default_value != nil {
 		default_val = *default_value
 	}
-	var rows = make([]vec.IntegerVector, row)
+	var rows = make([]vec.Float64Vec, row)
 	for i := 0; i < row; i++ {
 		rows = append(rows, *vec.NewIntegerVectorWithSize(column, &default_val))
 	}
@@ -44,14 +44,14 @@ func (mat *IntegerMatrix) GetVal(row, column int) float64 {
 	return mat.Data[row].GetVal(column)
 }
 
-func (mat *IntegerMatrix) GetRow(row int) vec.IntegerVector {
+func (mat *IntegerMatrix) GetRow(row int) vec.Float64Vec {
 	assert.AssertRange[int](row, 0, mat.Rows-1)
 	return mat.Data[row]
 }
 
-func (mat *IntegerMatrix) GetColumn(col int) vec.IntegerVector {
+func (mat *IntegerMatrix) GetColumn(col int) vec.Float64Vec {
 	assert.AssertRange[int](col, 0, mat.Columns-1)
-	columnVector := vec.NewIntegerVector()
+	columnVector := vec.NewVector()
 	for row := 0; row < mat.Rows; row++ {
 		columnVector.PushBack(mat.GetVal(row, col))
 	}
@@ -82,14 +82,14 @@ func (mat *IntegerMatrix) SimpleMultiplication(right IntegerMatrix) (*IntegerMat
 	result := NewIntegerMatrixWithDimensions(mat.Rows, right.Columns, nil)
 	var result_col int = result.Columns
 
-	for result_column := 0 ; result_column < result_col; result_column++{
-		var columns_to_add []vec.IntegerVector = make([]vec.IntegerVector, mat.Columns)
-		for right_col := 0 ; right_col < mat.Columns; right_col++{
+	for result_column := 0; result_column < result_col; result_column++ {
+		var columns_to_add []vec.Float64Vec = make([]vec.Float64Vec, mat.Columns)
+		for right_col := 0; right_col < mat.Columns; right_col++ {
 			col := mat.GetColumn(right_col)
 			col.ScalarMultiplication(right.GetVal(right_col, result_column))
 			columns_to_add = append(columns_to_add, col)
 		}
-		
+
 	}
 	return result, nil
 }
