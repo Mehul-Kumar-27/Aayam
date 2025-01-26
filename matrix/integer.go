@@ -5,19 +5,19 @@ import (
 	vec "github.com/Mehul-Kumar-27/Aayam/vector"
 )
 
-type IntegerMatrix struct {
+type Float64Matrix struct {
 	Data    []vec.Float64Vec
 	Rows    int
 	Columns int
 }
 
-func NewIntegerMatrix(elements ...vec.Float64Vec) *IntegerMatrix {
+func NewIntegerMatrix(elements ...vec.Float64Vec) *Float64Matrix {
 	rows := len(elements)
 	columns := 0
 	if rows > 0 {
 		columns = elements[0].Size()
 	}
-	integer_matrix := &IntegerMatrix{
+	integer_matrix := &Float64Matrix{
 		Data:    elements,
 		Rows:    rows,
 		Columns: columns,
@@ -25,31 +25,31 @@ func NewIntegerMatrix(elements ...vec.Float64Vec) *IntegerMatrix {
 	return integer_matrix
 }
 
-func NewIntegerMatrixWithDimensions(row, column int, default_value *float64) *IntegerMatrix {
+func NewIntegerMatrixWithDimensions(row, column int, default_value *float64) *Float64Matrix {
 	var default_val float64 = 0
 	if default_value != nil {
 		default_val = *default_value
 	}
 	var rows = make([]vec.Float64Vec, row)
 	for i := 0; i < row; i++ {
-		rows = append(rows, *vec.NewIntegerVectorWithSize(column, &default_val))
+		rows = append(rows, *vec.NewVector(column, &default_val))
 	}
 	return NewIntegerMatrix(rows...)
 }
 
-func (mat *IntegerMatrix) GetVal(row, column int) float64 {
+func (mat *Float64Matrix) GetVal(row, column int) float64 {
 	assert.AssertRange[int](row, 0, mat.Rows-1)
 	assert.AssertRange[int](column, 0, mat.Columns-1)
 
 	return mat.Data[row].GetVal(column)
 }
 
-func (mat *IntegerMatrix) GetRow(row int) vec.Float64Vec {
+func (mat *Float64Matrix) GetRow(row int) vec.Float64Vec {
 	assert.AssertRange[int](row, 0, mat.Rows-1)
 	return mat.Data[row]
 }
 
-func (mat *IntegerMatrix) GetColumn(col int) vec.Float64Vec {
+func (mat *Float64Matrix) GetColumn(col int) vec.Float64Vec {
 	assert.AssertRange[int](col, 0, mat.Columns-1)
 	columnVector := vec.NewVector()
 	for row := 0; row < mat.Rows; row++ {
@@ -58,7 +58,7 @@ func (mat *IntegerMatrix) GetColumn(col int) vec.Float64Vec {
 	return *columnVector
 }
 
-func (mat *IntegerMatrix) ScalarMultiplication(scalar float64) {
+func (mat *Float64Matrix) ScalarMultiplication(scalar float64) {
 	assert.AssertNotEqual(mat.Rows, 0)
 	assert.AssertNotEqual(mat.Columns, 0)
 
@@ -67,7 +67,7 @@ func (mat *IntegerMatrix) ScalarMultiplication(scalar float64) {
 	}
 }
 
-func (mat *IntegerMatrix) SetVal(row, column int, val float64) {
+func (mat *Float64Matrix) SetVal(row, column int, val float64) {
 	assert.AssertRange[int](row, 0, mat.Rows-1)
 	assert.AssertRange[int](column, 0, mat.Columns-1)
 	mat.Data[row].SetVal(column, val)
@@ -75,7 +75,7 @@ func (mat *IntegerMatrix) SetVal(row, column int, val float64) {
 
 // Multiplies two matrices the argument matrix is present on the right of the matrix
 // It does the multiplication by representing the multiplication as the linear combination of columns of the two matrices
-func (mat *IntegerMatrix) SimpleMultiplication(right IntegerMatrix) (*IntegerMatrix, error) {
+func (mat *Float64Matrix) SimpleMultiplication(right Float64Matrix) (*Float64Matrix, error) {
 	if !assert.AssertEqual(mat.Columns, right.Rows) {
 		return nil, ErrDimensionMismatch
 	}

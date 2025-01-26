@@ -1,6 +1,10 @@
 package vector
 
-import "github.com/Mehul-Kumar-27/Aayam/concurrency"
+import (
+	"sync"
+
+	"github.com/Mehul-Kumar-27/Aayam/concurrency"
+)
 
 // AddFloat64Vectors adds multiple IntegerVectors together and returns a pointer to the resultant vector and an error if any.
 // It takes a variadic number of IntegerVector arguments and performs the following steps:
@@ -27,8 +31,25 @@ func AddFloat64Vectors(vectors []Float64Vec, opts ...*concurrency.ConcurrencyOpt
 	// Create a new vector with the same size and default value of 0
 	resultant_vector := NewVector(Float64VecOptions{Size: size})
 
-	
-
+	///Opts provided means we would use the concurrency support
+	var concurrencyOpts *concurrency.ConcurrencyOptions
+	if len(opts) > 0 && opts[0] != nil {
+		concurrencyOpts = opts[0]
+	}
+	if concurrencyOpts != nil && concurrencyOpts.Enabled {
+		var batchSize int = (len(vectors) * 20) / 100
+		if batchSize < 1 {
+			batchSize = 1
+		}
+		if concurrencyOpts.Batch_Size != 0 {
+			batchSize = concurrencyOpts.Batch_Size
+		}
+		err := addVectorsConcurrently(vectors, resultant_vector, batchSize)
+		if err != nil {
+			return nil, err
+		}
+		return resultant_vector, nil
+	}
 	// Add all vectors element-wise
 	for _, vec := range vectors {
 		for index := 0; index < size; index++ {
@@ -37,4 +58,51 @@ func AddFloat64Vectors(vectors []Float64Vec, opts ...*concurrency.ConcurrencyOpt
 	}
 
 	return resultant_vector, nil
+}
+
+func addVectorsConcurrently(vectors []Float64Vec, resultant_vector *Float64Vec, batchSize int) error {
+	total_vectors := len(vectors)
+	numBatches := (total_vectors + batchSize - 1) / batchSize
+	size := resultant_vector.Size()
+	var wg sync.WaitGroup
+
+	resultChan := make(chan *Float64Vec, numBatches)
+
+	for i := 0; i < numBatches; i++ {
+		wg.Add(1)
+		go func(batchIndex int) {
+			defer wg.Done()
+			start := batchIndex * batchSize
+			end := start + batchSize
+			if end > total_vectors {
+				end = total_vectors
+			}
+
+			// Initialize the vector to store this batch result
+			batchResult := NewVector(Float64VecOptions{
+				Size: resultant_vector.Size(),
+			})
+
+			for index := start; index < end; index++ {
+				vec := vectors[index]
+				for i := 0; i < size; i++ {
+					batchResult.Data[i] += vec.GetVal(i)
+				}
+			}
+			resultChan <- batchResult
+		}(i)
+	}
+
+	go func() {
+		wg.Wait()
+		close(resultChan)
+	}()
+
+	for batchResult := range resultChan {
+		for i, val := range batchResult.Data {
+			resultant_vector.Data[i] += val
+		}
+	}
+
+	return nil
 }
