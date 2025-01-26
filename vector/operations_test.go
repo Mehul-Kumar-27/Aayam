@@ -42,8 +42,8 @@ func TestAddFloat64Vectors(t *testing.T) {
 				*NewVector(Float64VecOptions{Size: 3, Elements: []float64{1, 2, 3}}),
 				*NewVector(Float64VecOptions{Size: 4, Elements: []float64{4, 5, 6, 7}}),
 			},
-			expectedResult: nil,
-			expectedError:  ErrInvalidVectorLength,
+			expectedResult: NewVector(Float64VecOptions{Size: 3, Elements: []float64{5, 7, 9, 7}}),
+			expectedError:  nil,
 		},
 		{
 			name: "Add empty vectors",
@@ -72,7 +72,7 @@ func TestAddFloat64Vectors(t *testing.T) {
 					Size: 20,
 					Elements: []float64{
 						1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
-						11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+						11, 12, 13, 14, 15, 16, 17, 18, 19,
 					},
 				}),
 				*NewVector(Float64VecOptions{
@@ -87,7 +87,7 @@ func TestAddFloat64Vectors(t *testing.T) {
 				Size: 20,
 				Elements: []float64{
 					21, 21, 21, 21, 21, 21, 21, 21, 21, 21,
-					21, 21, 21, 21, 21, 21, 21, 21, 21, 21,
+					21, 21, 21, 21, 21, 21, 21, 21, 21, 1,
 				},
 			}),
 			expectedError: nil,

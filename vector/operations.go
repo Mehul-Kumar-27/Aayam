@@ -1,6 +1,7 @@
 package vector
 
 import (
+	"sort"
 	"sync"
 
 	"github.com/Mehul-Kumar-27/Aayam/concurrency"
@@ -13,20 +14,12 @@ import (
 // 3. Iterates over each vector and adds corresponding elements to the initial vector.
 // The function returns a pointer to the resultant IntegerVector and nil if successful, or an error if any of the checks fail.
 func AddFloat64Vectors(vectors []Float64Vec, opts ...*concurrency.ConcurrencyOptions) (*Float64Vec, error) {
-
+	sort.Sort(sort.Reverse(BySize(vectors)))
 	// Get the size of the first vector
 	size := vectors[0].Size()
 	if size == 0 {
 		return nil, ErrEmptyVectorLength
 	}
-	var vectors_len int = len(vectors)
-	// Check whether all the vectors are of the same size
-	for i := 1; i < vectors_len; i++ {
-		if vectors[i].Size() != size {
-			return nil, ErrInvalidVectorLength
-		}
-	}
-
 	// Create a new vector with the same size and default value of 0
 	resultant_vector := NewVector(Float64VecOptions{Size: size})
 
@@ -51,7 +44,7 @@ func AddFloat64Vectors(vectors []Float64Vec, opts ...*concurrency.ConcurrencyOpt
 	}
 	// Add all vectors element-wise
 	for _, vec := range vectors {
-		for index := 0; index < size; index++ {
+		for index := 0; index < vec.Size(); index++ {
 			resultant_vector.Data[index] += vec.Data[index]
 		}
 	}
@@ -62,7 +55,6 @@ func AddFloat64Vectors(vectors []Float64Vec, opts ...*concurrency.ConcurrencyOpt
 func addVectorsConcurrently(vectors []Float64Vec, resultant_vector *Float64Vec, batchSize int) error {
 	total_vectors := len(vectors)
 	numBatches := (total_vectors + batchSize - 1) / batchSize
-	size := resultant_vector.Size()
 	var wg sync.WaitGroup
 
 	resultChan := make(chan *Float64Vec, numBatches)
@@ -84,7 +76,7 @@ func addVectorsConcurrently(vectors []Float64Vec, resultant_vector *Float64Vec, 
 
 			for index := start; index < end; index++ {
 				vec := vectors[index]
-				for i := 0; i < size; i++ {
+				for i := 0; i < vec.Size(); i++ {
 					batchResult.Data[i] += vec.GetVal(i)
 				}
 			}
