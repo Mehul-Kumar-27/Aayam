@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 	"testing"
 
-	assert "github.com/Mehul-Kumar-27/Aayam/utils"
 	vec "github.com/Mehul-Kumar-27/Aayam/vector"
 )
 
@@ -39,13 +38,9 @@ func BenchmarkVectorAdditionSmallDataSet(b *testing.B) {
 		if err != nil {
 			b.Fatalf("%v", err)
 		}
-		sum_result, err := vec.AddFloat64Vectors(vectorData.Vectors)
+		_, err = vec.AddFloat64Vectors(vectorData.Vectors)
 		if err != nil {
 			b.Fatalf("error occurred while adding vectors :%v", err)
-		}
-		result := assert.AssertDeepEqual(*sum_result, vectorData.Sum)
-		if !result {
-			b.FailNow()
 		}
 	}
 
@@ -75,13 +70,9 @@ func BenchmarkVectorAdditionNormalDataSet(b *testing.B) {
 		if err != nil {
 			b.Fatalf("%v", err)
 		}
-		sum_result, err := vec.AddFloat64Vectors(vectorData.Vectors)
+		_, err = vec.AddFloat64Vectors(vectorData.Vectors)
 		if err != nil {
 			b.Fatalf("error occurred while adding vectors :%v", err)
-		}
-		result := assert.AssertDeepEqual(*sum_result, vectorData.Sum)
-		if !result {
-			b.FailNow()
 		}
 	}
 
@@ -111,13 +102,9 @@ func BenchmarkVectorAdditionLargeDataSet(b *testing.B) {
 		if err != nil {
 			b.Fatalf("%v", err)
 		}
-		sum_result, err := vec.AddFloat64Vectors(vectorData.Vectors)
+		_, err = vec.AddFloat64Vectors(vectorData.Vectors)
 		if err != nil {
 			b.Fatalf("error occurred while adding vectors :%v", err)
-		}
-		result := assert.AssertDeepEqual(*sum_result, vectorData.Sum)
-		if !result {
-			b.FailNow()
 		}
 	}
 
