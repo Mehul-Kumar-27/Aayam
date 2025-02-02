@@ -2,94 +2,93 @@ package matrix
 
 import (
 	assert "github.com/Mehul-Kumar-27/Aayam/utils"
-	vec "github.com/Mehul-Kumar-27/Aayam/vector"
 )
 
-type Float64Matrix struct {
-	Data    []vec.Float64Vec
-	Rows    int
-	Columns int
+type Float64Mat struct {
+	Data [][]float64
 }
 
-func NewIntegerMatrix(elements ...vec.Float64Vec) *Float64Matrix {
-	rows := len(elements)
-	columns := 0
-	if rows > 0 {
-		columns = elements[0].Size()
+// NewMatrix creates a new matrix based on the provided options
+func NewMatrix(opts Float64MatOptions) *Float64Mat {
+	if opts.Elements != nil {
+		// If elements are provided, use them to create the matrix
+		return &Float64Mat{Data: opts.Elements}
 	}
-	integer_matrix := &Float64Matrix{
-		Data:    elements,
-		Rows:    rows,
-		Columns: columns,
-	}
-	return integer_matrix
-}
 
-func NewIntegerMatrixWithDimensions(row, column int, default_value *float64) *Float64Matrix {
-	var default_val float64 = 0
-	if default_value != nil {
-		default_val = *default_value
-	}
-	var rows = make([]vec.Float64Vec, row)
-	for i := 0; i < row; i++ {
-		rows = append(rows, *vec.NewVector(column, &default_val))
-	}
-	return NewIntegerMatrix(rows...)
-}
-
-func (mat *Float64Matrix) GetVal(row, column int) float64 {
-	assert.AssertRange[int](row, 0, mat.Rows-1)
-	assert.AssertRange[int](column, 0, mat.Columns-1)
-
-	return mat.Data[row].GetVal(column)
-}
-
-func (mat *Float64Matrix) GetRow(row int) vec.Float64Vec {
-	assert.AssertRange[int](row, 0, mat.Rows-1)
-	return mat.Data[row]
-}
-
-func (mat *Float64Matrix) GetColumn(col int) vec.Float64Vec {
-	assert.AssertRange[int](col, 0, mat.Columns-1)
-	columnVector := vec.NewVector()
-	for row := 0; row < mat.Rows; row++ {
-		columnVector.PushBack(mat.GetVal(row, col))
-	}
-	return *columnVector
-}
-
-func (mat *Float64Matrix) ScalarMultiplication(scalar float64) {
-	assert.AssertNotEqual(mat.Rows, 0)
-	assert.AssertNotEqual(mat.Columns, 0)
-
-	for row := 0; row < mat.Rows; row++ {
-		mat.Data[row].ScalarMultiplication(scalar)
-	}
-}
-
-func (mat *Float64Matrix) SetVal(row, column int, val float64) {
-	assert.AssertRange[int](row, 0, mat.Rows-1)
-	assert.AssertRange[int](column, 0, mat.Columns-1)
-	mat.Data[row].SetVal(column, val)
-}
-
-// Multiplies two matrices the argument matrix is present on the right of the matrix
-// It does the multiplication by representing the multiplication as the linear combination of columns of the two matrices
-func (mat *Float64Matrix) SimpleMultiplication(right Float64Matrix) (*Float64Matrix, error) {
-	if !assert.AssertEqual(mat.Columns, right.Rows) {
-		return nil, ErrDimensionMismatch
-	}
-	result := NewIntegerMatrixWithDimensions(mat.Rows, right.Columns, nil)
-	var result_col int = result.Columns
-
-	for result_column := 0; result_column < result_col; result_column++ {
-		var columns_to_add []vec.Float64Vec = make([]vec.Float64Vec, mat.Columns)
-		for right_col := 0; right_col < mat.Columns; right_col++ {
-			col := mat.GetColumn(right_col)
-			col.ScalarMultiplication(right.GetVal(right_col, result_column))
-			columns_to_add = append(columns_to_add, col)
+	// If rows and cols are provided, create a matrix of that size
+	if opts.Rows > 0 && opts.Cols > 0 {
+		defaultValue := 0.0
+		if opts.DefaultVal != nil {
+			defaultValue = *opts.DefaultVal
 		}
 
+		// Initialize a 2D slice with rows and columns
+		data := make([][]float64, opts.Rows)
+		for i := range data {
+			data[i] = make([]float64, opts.Cols)
+			// Fill with the default value
+			for j := range data[i] {
+				data[i][j] = defaultValue
+			}
+		}
+		return &Float64Mat{Data: data}
 	}
-	return result, nil
+
+	// If no options are provided, return an empty matrix
+	return &Float64Mat{Data: [][]float64{}}
+}
+
+// Size returns the dimensions of the matrix (rows, columns)
+func (mat *Float64Mat) Size() (int, int) {
+	return len(mat.Data), len(mat.Data[0])
+}
+
+// ScalarMultiplication performs scalar multiplication on the matrix
+func (mat *Float64Mat) ScalarMultiplication(scalar float64) {
+	assert.AssertNotEqual(len(mat.Data), 0)
+	for i := 0; i < len(mat.Data); i++ {
+		for j := 0; j < len(mat.Data[i]); j++ {
+			mat.Data[i][j] *= scalar
+		}
+	}
+}
+
+// GetVal returns the value at the specified row and column
+func (mat *Float64Mat) GetVal(row, col int) float64 {
+	assert.AssertRange[int](row, 0, len(mat.Data)-1)
+	assert.AssertRange[int](col, 0, len(mat.Data[0])-1)
+	return mat.Data[row][col]
+}
+
+// SetVal sets the value at the specified row and column
+func (mat *Float64Mat) SetVal(row, col int, val float64) {
+	assert.AssertRange[int](row, 0, len(mat.Data)-1)
+	assert.AssertRange[int](col, 0, len(mat.Data[0])-1)
+	mat.Data[row][col] = val
+}
+
+// DotProduct calculates the dot product of two matrices
+func (mat *Float64Mat) DotProduct(another *Float64Mat) float64 {
+	rows, cols := mat.Size()
+	anotherRows, anotherCols := another.Size()
+	assert.AssertEqual(rows, anotherRows)
+	assert.AssertEqual(cols, anotherCols)
+
+	var dotProduct float64
+	for i := 0; i < rows; i++ {
+		for j := 0; j < cols; j++ {
+			dotProduct += mat.GetVal(i, j) * another.GetVal(i, j)
+		}
+	}
+	return dotProduct
+}
+
+// PushBack adds a row to the matrix
+func (mat *Float64Mat) PushBack(row []float64) {
+	mat.Data = append(mat.Data, row)
+}
+
+// PushFront adds a row to the front of the matrix
+func (mat *Float64Mat) PushFront(row []float64) {
+	mat.Data = append([][]float64{row}, mat.Data...)
 }
