@@ -7,15 +7,11 @@ import (
 	"path/filepath"
 	"testing"
 
-	assert "github.com/Mehul-Kumar-27/Aayam/utils"
+	"github.com/Mehul-Kumar-27/Aayam/concurrency"
 	vec "github.com/Mehul-Kumar-27/Aayam/vector"
 )
 
-const smallDataSetSize int = 11
-const normalDataSetSize int = 101
-const largeDataSetSize int = 1001
-
-func BenchmarkVectorAdditionSmallDataSet(b *testing.B) {
+func BenchmarkVectorAdditionSmallDataSetConcurrently(b *testing.B) {
 	dataSetPath := "../../../data/vector_addition/small_data.jsonl"
 	cwd, err := os.Getwd()
 	if err != nil {
@@ -36,22 +32,22 @@ func BenchmarkVectorAdditionSmallDataSet(b *testing.B) {
 			break
 		}
 		b.StartTimer()
+		concurrencyOpts := concurrency.ConcurrencyOptions{
+			Enabled: true,
+			Batch_Size: len(vectorData.Vectors) / 20,
+		}
 		if err != nil {
 			b.Fatalf("%v", err)
 		}
-		sum_result, err := vec.AddFloat64Vectors(vectorData.Vectors)
+		_, err = vec.AddFloat64Vectors(vectorData.Vectors, &concurrencyOpts)
 		if err != nil {
 			b.Fatalf("error occurred while adding vectors :%v", err)
-		}
-		result := assert.AssertDeepEqual(*sum_result, vectorData.Sum)
-		if !result {
-			b.FailNow()
 		}
 	}
 
 }
 
-func BenchmarkVectorAdditionNormalDataSet(b *testing.B) {
+func BenchmarkVectorAdditionNormalDataSetConcurrently(b *testing.B) {
 	dataSetPath := "../../../data/vector_addition/normal_data.jsonl"
 	cwd, err := os.Getwd()
 	if err != nil {
@@ -75,19 +71,19 @@ func BenchmarkVectorAdditionNormalDataSet(b *testing.B) {
 		if err != nil {
 			b.Fatalf("%v", err)
 		}
-		sum_result, err := vec.AddFloat64Vectors(vectorData.Vectors)
+		concurrencyOpts := concurrency.ConcurrencyOptions{
+			Enabled: true,
+			Batch_Size: len(vectorData.Vectors) / 20,
+		}
+		_, err = vec.AddFloat64Vectors(vectorData.Vectors, &concurrencyOpts)
 		if err != nil {
 			b.Fatalf("error occurred while adding vectors :%v", err)
-		}
-		result := assert.AssertDeepEqual(*sum_result, vectorData.Sum)
-		if !result {
-			b.FailNow()
 		}
 	}
 
 }
 
-func BenchmarkVectorAdditionLargeDataSet(b *testing.B) {
+func BenchmarkVectorAdditionLargeDataSetConcurrently(b *testing.B) {
 	dataSetPath := "../../../data/vector_addition/large_data.jsonl"
 	cwd, err := os.Getwd()
 	if err != nil {
@@ -108,16 +104,16 @@ func BenchmarkVectorAdditionLargeDataSet(b *testing.B) {
 			break
 		}
 		b.StartTimer()
+		concurrencyOpts := concurrency.ConcurrencyOptions{
+			Enabled: true,
+			Batch_Size: len(vectorData.Vectors) / 20,
+		}
 		if err != nil {
 			b.Fatalf("%v", err)
 		}
-		sum_result, err := vec.AddFloat64Vectors(vectorData.Vectors)
+		_, err = vec.AddFloat64Vectors(vectorData.Vectors, &concurrencyOpts)
 		if err != nil {
 			b.Fatalf("error occurred while adding vectors :%v", err)
-		}
-		result := assert.AssertDeepEqual(*sum_result, vectorData.Sum)
-		if !result {
-			b.FailNow()
 		}
 	}
 

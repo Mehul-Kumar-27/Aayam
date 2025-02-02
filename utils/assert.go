@@ -66,3 +66,24 @@ func AssertRange[T comparable](got, min_val, max_val int) bool {
 	logger.LogMessage(logEntry)
 	return false
 }
+
+// AssertDeepEqual is a generic function that uses reflect.DeepEqual to compare two values
+func AssertDeepEqual(got, expected interface{}) bool {
+	var logEntry Log
+
+	if reflect.DeepEqual(got, expected) {
+		return true
+	}
+
+	logEntry = Log{
+		Level: WarningLevel,
+		Info: fmt.Sprintf("Assertion failed: expected %v (type %v), got %v (type %v)",
+			expected,
+			reflect.TypeOf(expected),
+			got,
+			reflect.TypeOf(got)),
+	}
+	logger := NewLogger()
+	logger.LogMessage(logEntry)
+	return false
+}
