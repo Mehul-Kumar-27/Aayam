@@ -77,7 +77,7 @@ func TestAddMatrix(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result, err := AddMatrix(tt.matrices, concurrency.ConcurrencyOptions{Enabled: tt.isConcurrent, Batch_Size: 10})
+			result, err := AddMatrix(tt.matrices, &concurrency.ConcurrencyOptions{Enabled: tt.isConcurrent, Batch_Size: 10})
 			if (err != nil && tt.expectedError == nil) || (err == nil && tt.expectedError != nil) || (err != nil && tt.expectedError != nil && err.Error() != tt.expectedError.Error()) {
 				t.Errorf("AddMatrix() error = %v, wantErr %v", err, tt.expectedError)
 				return
