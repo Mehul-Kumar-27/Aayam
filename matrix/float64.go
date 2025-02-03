@@ -43,6 +43,14 @@ func (mat *Float64Mat) Size() (int, int) {
 	return len(mat.Data), len(mat.Data[0])
 }
 
+func (mat *Float64Mat) Rows() int {
+	return len(mat.Data)
+}
+
+func (mat *Float64Mat) Columns() int {
+	return len(mat.Data[0])
+}
+
 // ScalarMultiplication performs scalar multiplication on the matrix
 func (mat *Float64Mat) ScalarMultiplication(scalar float64) {
 	assert.AssertNotEqual(len(mat.Data), 0)
@@ -91,4 +99,19 @@ func (mat *Float64Mat) PushBack(row []float64) {
 // PushFront adds a row to the front of the matrix
 func (mat *Float64Mat) PushFront(row []float64) {
 	mat.Data = append([][]float64{row}, mat.Data...)
+}
+
+func (mat *Float64Mat) GetColumn(col int) []float64 {
+	assert.AssertRange[int](col, 0, len(mat.Data[0])-1)
+	columnData := make([]float64, mat.Rows())
+
+	for i := range mat.Data {
+		columnData[i] = mat.Data[i][col]
+	}
+	return columnData
+}
+
+func (mat *Float64Mat) GetRow(row int) []float64 {
+	assert.AssertRange[int](row, 0, mat.Rows())
+	return mat.Data[row]
 }
