@@ -22,14 +22,19 @@ func AddMatrix(mats []Float64Mat, opts ...concurrency.ConcurrencyOptions) (*Floa
 	// Now we are good to go for matrix addition :)
 	defaultValue := 0.0
 	matOpts := &Float64MatOptions{
-		Rows: rows,
-		Cols: cols,
+		Rows:       rows,
+		Cols:       cols,
 		DefaultVal: &defaultValue,
 	}
 	result := NewMatrix(*matOpts)
 	for _, element := range mats {
 		matrix := element
-		
+		for r := 0; r < rows; r++ {
+			for c := 0; c < cols; c++ {
+				result.Data[r][c] += matrix.Data[r][c]
+			}
+		}
+
 	}
-	return nil, nil
+	return result, nil
 }
