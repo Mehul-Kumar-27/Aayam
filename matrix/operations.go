@@ -35,7 +35,18 @@ func AddMatrix(mats []Float64Mat, opts ...*concurrency.ConcurrencyOptions) (*Flo
 	}
 
 	if concurrencyOpts != nil && concurrencyOpts.Enabled {
-		return nil, nil
+		var numWorkers int = (result.Rows() * 20) / 100
+		if numWorkers < 1 {
+			numWorkers = 1
+		}
+		if concurrencyOpts.Batch_Size != 0 {
+			numWorkers = concurrencyOpts.Batch_Size
+		}
+		err := addMatrixRowParallel(mats, result, numWorkers)
+		if err != nil {
+			return nil, err
+		}
+		return result, err
 	}
 	for _, element := range mats {
 		matrix := element
@@ -48,48 +59,38 @@ func AddMatrix(mats []Float64Mat, opts ...*concurrency.ConcurrencyOptions) (*Flo
 	return result, nil
 }
 
-func addMatrixConcurrently(mats []Float64Mat, resultantMat *Float64Mat, numWorkers int) error {
-	totalMats := len(mats)
-	numBatches := (totalMats + numWorkers - 1) / numWorkers
+func addMatrixRowParallel(mats []Float64Mat, resultantMat *Float64Mat, numWorkers int) error {
+	rows := resultantMat.Rows()
+	cols := resultantMat.Columns()
 	var wg sync.WaitGroup
 
-	resultChan := make(chan *Float64Mat, numBatches)
-	for i := 0; i < numBatches; i++ {
-		wg.Add(1)
-		go func(batchIndex int) {
-			defer wg.Done()
-			start := batchIndex * numWorkers
-			end := start + numWorkers
-			if end > totalMats {
-				end = totalMats
-			}
-			batchResult := NewMatrix(Float64MatOptions{
-				Rows: resultantMat.Rows(),
-				Cols: resultantMat.Columns(),
-			})
+	// Create a channel to distribute row indices to workers.
+	rowChan := make(chan int, rows)
 
-			for index := start; index < end; index++ {
-				matrix := mats[index]
-				for r := 0; r < batchResult.Rows(); r++ {
-					for c := 0; c < batchResult.Columns(); c++ {
-						batchResult.Data[r][c] += matrix.Data[r][c]
+	// Start worker goroutines.
+	for i := 0; i < numWorkers; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			// Each worker processes rows sent through the channel.
+			for r := range rowChan {
+				// For each column in the row, compute the sum over all matrices.
+				for c := 0; c < cols; c++ {
+					var sum float64
+					for _, mat := range mats {
+						sum += mat.Data[r][c]
 					}
+					resultantMat.Data[r][c] = sum
 				}
 			}
-			resultChan <- batchResult
-		}(i)
+		}()
 	}
-	go func() {
-		wg.Wait()
-		close(resultChan)
-	}()
 
-	for batchResult := range resultChan {
-		for r := 0; r < resultantMat.Rows(); r++ {
-			for c := 0; c < resultantMat.Columns(); c++ {
-				resultantMat.Data[r][c] += batchResult.Data[r][c]
-			}
-		}
+	for r := 0; r < rows; r++ {
+		rowChan <- r
 	}
+	close(rowChan)
+
+	wg.Wait()
 	return nil
 }
