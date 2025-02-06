@@ -115,3 +115,26 @@ func (mat *Float64Mat) GetRow(row int) []float64 {
 	assert.AssertRange[int](row, 0, mat.Rows())
 	return mat.Data[row]
 }
+
+func (mat *Float64Mat) SetColumn(elements []float64, col int) error {
+	assert.AssertEqual(mat.Rows(), len(elements))
+	for rowIndex, data := range mat.Data {
+		data[col] = elements[rowIndex]
+	}
+	return nil
+}
+
+// Returns a one column matrix with the data provided
+func ColumnMatrix(data []float64) *Float64Mat {
+	rows := len(data)
+	// Create a 2D slice with each row being a single element slice.
+	elements := make([][]float64, rows)
+	for i, v := range data {
+		elements[i] = []float64{v}
+	}
+	return NewMatrix(Float64MatOptions{
+		Rows:     rows,
+		Cols:     1,
+		Elements: elements,
+	})
+}

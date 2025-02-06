@@ -1,8 +1,6 @@
 package matrix
 
 import (
-	"sync"
-
 	"github.com/Mehul-Kumar-27/Aayam/concurrency"
 	assert "github.com/Mehul-Kumar-27/Aayam/utils"
 )
@@ -59,38 +57,35 @@ func AddMatrix(mats []Float64Mat, opts ...*concurrency.ConcurrencyOptions) (*Flo
 	return result, nil
 }
 
-func addMatrixRowParallel(mats []Float64Mat, resultantMat *Float64Mat, numWorkers int) error {
-	rows := resultantMat.Rows()
-	cols := resultantMat.Columns()
-	var wg sync.WaitGroup
-
-	// Create a channel to distribute row indices to workers.
-	rowChan := make(chan int, rows)
-
-	// Start worker goroutines.
-	for i := 0; i < numWorkers; i++ {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			// Each worker processes rows sent through the channel.
-			for r := range rowChan {
-				// For each column in the row, compute the sum over all matrices.
-				for c := 0; c < cols; c++ {
-					var sum float64
-					for _, mat := range mats {
-						sum += mat.Data[r][c]
-					}
-					resultantMat.Data[r][c] = sum
-				}
-			}
-		}()
+func MultiplyMatrix(leftMatrix Float64Mat, rightMatrix Float64Mat, opts ...*concurrency.ConcurrencyOptions) (*Float64Mat, error) {
+	if !assert.AssertEqual(leftMatrix.Columns(), rightMatrix.Rows()) {
+		return nil, ErrDimensionMismatch
 	}
+	leftRows := leftMatrix.Rows()
+	leftColumns := leftMatrix.Columns()
 
-	for r := 0; r < rows; r++ {
-		rowChan <- r
+	rightColumns := rightMatrix.Columns()
+
+	resultantMatrix := NewMatrix(Float64MatOptions{
+		Rows: leftRows,
+		Cols: rightColumns,
+	})
+	// Here we represent the matrix multiplication as the addition of linear combination of columns of matrixes
+	for col := 0; col < resultantMatrix.Columns(); col++ {
+		// Now we transverse the columns of the left matrix and represent them as a linear combination
+		linearCombination := make([]Float64Mat, 0, leftColumns)
+		for leftCol := 0; leftCol < leftColumns; leftCol++ {
+			leftColData := leftMatrix.GetColumn(leftCol)
+			leftColDataAsMatrix := ColumnMatrix(leftColData)
+			leftColDataAsMatrix.ScalarMultiplication(rightMatrix.GetVal(leftCol, col))
+			linearCombination = append(linearCombination, *leftColDataAsMatrix)
+		}
+		// Now this linearCombination slice contains the matrix columns and adding then will provide us with this column data
+		columnAsMatrix, err := AddMatrix(linearCombination)
+		if err != nil {
+			return nil, err
+		}
+		resultantMatrix.SetColumn(columnAsMatrix.GetColumn(0), col)
 	}
-	close(rowChan)
-
-	wg.Wait()
-	return nil
+	return resultantMatrix, nil
 }

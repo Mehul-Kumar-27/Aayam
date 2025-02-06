@@ -88,3 +88,60 @@ func TestAddMatrix(t *testing.T) {
 		})
 	}
 }
+
+func TestMultiplyMatrix(t *testing.T) {
+	tests := []struct {
+		name           string
+		leftMatrix     Float64Mat
+		rightMatrix    Float64Mat
+		expectedResult *Float64Mat
+		expectedError  error
+		isConcurrent   bool
+	}{
+		{
+			name: "Multiply two compatible matrices",
+			leftMatrix: *NewMatrix(Float64MatOptions{Rows: 2, Cols: 3, Elements: [][]float64{{1, 2, 3}, {4, 5, 6}}}),
+			rightMatrix: *NewMatrix(Float64MatOptions{Rows: 3, Cols: 2, Elements: [][]float64{{7, 8}, {9, 10}, {11, 12}}}),
+			expectedResult: NewMatrix(Float64MatOptions{Rows: 2, Cols: 2, Elements: [][]float64{{58, 64}, {139, 154}}}),
+			expectedError:  nil,
+			isConcurrent:   false,
+		},
+		{
+			name: "Multiply matrices with dimension mismatch",
+			leftMatrix: *NewMatrix(Float64MatOptions{Rows: 2, Cols: 2, Elements: [][]float64{{1, 2}, {3, 4}}}),
+			rightMatrix: *NewMatrix(Float64MatOptions{Rows: 3, Cols: 2, Elements: [][]float64{{5, 6}, {7, 8}, {9, 10}}}),
+			expectedResult: nil,
+			expectedError:  ErrDimensionMismatch,
+			isConcurrent:   false,
+		},
+		{
+			name: "Multiply by zero matrix",
+			leftMatrix: *NewMatrix(Float64MatOptions{Rows: 2, Cols: 3, Elements: [][]float64{{1, 2, 3}, {4, 5, 6}}}),
+			rightMatrix: *NewMatrix(Float64MatOptions{Rows: 3, Cols: 2, Elements: [][]float64{{0, 0}, {0, 0}, {0, 0}}}),
+			expectedResult: NewMatrix(Float64MatOptions{Rows: 2, Cols: 2, Elements: [][]float64{{0, 0}, {0, 0}}}),
+			expectedError:  nil,
+			isConcurrent:   false,
+		},
+		{
+			name: "Multiply two matrices concurrently",
+			leftMatrix: *NewMatrix(Float64MatOptions{Rows: 3, Cols: 3, Elements: [][]float64{{1, 2, 3}, {4, 5, 6}, {7, 8, 9}}}),
+			rightMatrix: *NewMatrix(Float64MatOptions{Rows: 3, Cols: 3, Elements: [][]float64{{9, 8, 7}, {6, 5, 4}, {3, 2, 1}}}),
+			expectedResult: NewMatrix(Float64MatOptions{Rows: 3, Cols: 3, Elements: [][]float64{{30, 24, 18}, {84, 69, 54}, {138, 114, 90}}}),
+			expectedError:  nil,
+			isConcurrent:   true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result, err := MultiplyMatrix(tt.leftMatrix, tt.rightMatrix, &concurrency.ConcurrencyOptions{Enabled: tt.isConcurrent, Batch_Size: 10})
+			if (err != nil && tt.expectedError == nil) || (err == nil && tt.expectedError != nil) || (err != nil && tt.expectedError != nil && err.Error() != tt.expectedError.Error()) {
+				t.Errorf("MultiplyMatrix() error = %v, wantErr %v", err, tt.expectedError)
+				return
+			}
+			if !reflect.DeepEqual(result, tt.expectedResult) {
+				t.Errorf("MultiplyMatrix() = %v, want %v", result, tt.expectedResult)
+			}
+		})
+	}
+}
